@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"time"
 
@@ -17,12 +18,11 @@ import (
 )
 
 func main() {
-	//get hoem directory path
-	path := getHomeDirectoryPath()
-	log.Print(path)
+	var isUsingKind bool = true
+	var kubeConfig string
+
 	//get kubeconfig
-	kubeConfig := getKubeConfig(path)
-	log.Print(kubeConfig)
+	kubeConfig = getKubeConfig(isUsingKind)
 
 	//use the current context in kubeconfig
 	configContext, err := clientcmd.BuildConfigFromFlags("", kubeConfig)
@@ -39,11 +39,22 @@ func main() {
 	}
 }
 
-func getKubeConfig(path string) string {
+func getKubeConfig(usingKind bool) string {
 	var kubeconfig string
 
-	if path != "" {
-		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(path, ".kube", "config"), "(optional) path to config file")
+	//get hoem directory path
+	homeDir := getHomeDirectoryPath()
+	log.Print(homeDir)
+
+	var configName string
+	if usingKind {
+		configName = "kind-config-devEnv"
+	} else {
+		configName = "config"
+	}
+
+	if homeDir != "" {
+		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(homeDir, ".kube", configName), "(optional) path to config file")
 	} else {
 		flag.StringVar(&kubeconfig, "kubeconfig", "", "path to kube config file")
 	}
@@ -51,7 +62,9 @@ func getKubeConfig(path string) string {
 }
 
 func getHomeDirectoryPath() string {
-	homePath := os.Getenv("Home")
+	homePath, err := os.UserHomeDir()
+	handleError(err)
+	log.Print(homePath)
 	if homePath != "" {
 		log.Print("linux mode")
 		return homePath
@@ -78,7 +91,7 @@ func showMethePods(clientSet *kubernetes.Clientset) {
 
 	fmt.Printf("There are %d pods in the cluster\n", len(pods.Items))
 
-	log.Print(pods.Items[100].Spec.DNSConfig)
+	log.Print(pods.Items[1].Spec.DNSConfig)
 }
 
 func getSpecificPod(clientSet *kubernetes.Clientset, namespace string, podName string) {
@@ -100,6 +113,16 @@ func getSpecificPod(clientSet *kubernetes.Clientset, namespace string, podName s
 
 func handleError(err error) {
 	if err != nil {
+		log.Print(err)
 		panic(err.Error())
 	}
+}
+
+func getKindConfigByCommand() string {
+
+	cmd := exec.Command("kind", "get", "kubeconfig-path", "--name=devEnv ")
+	output, err := cmd.CombinedOutput()
+	handleError(err)
+	result := string(output)
+	return result
 }
