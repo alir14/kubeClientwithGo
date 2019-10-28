@@ -7,8 +7,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"time"
 
+	appsv1 "k8s.io/api/apps/v1"
+	apiv1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -32,11 +33,86 @@ func main() {
 	// create the clientset
 	clientSet := getClientSetInstance(configContext)
 
-	for {
-		showMethePods(&clientSet)
+	showMethePods(&clientSet)
 
-		time.Sleep(10 * time.Second)
+	createDeployment(&clientSet)
+
+	showMethePods(&clientSet)
+}
+
+func createService(clientSet *kubernetes.Clientset) {
+	serviceDeployment := clientSet.CoreV1().Services(apiv1.NamespaceDefault)
+
+	service := &apiv1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "demo-deploymentservice",
+			Namespace: apiv1.NamespaceDefault,
+			Labels: map[string]string{
+				"k8s-app": "kube-controller-manager",
+			},
+		},
+		Spec: apiv1.ServiceSpec{
+			Ports:     nil,
+			Selector:  nil,
+			ClusterIP: "",
+		},
 	}
+
+	fmt.Println("creating ....")
+
+	result, err := serviceDeployment.Create(service)
+
+	handleError(err)
+
+	log.Printf("created service %q /n", result.GetObjectMeta().GetName())
+}
+
+func createDeployment(clientSet *kubernetes.Clientset) {
+	deploymentClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
+
+	deployment := &appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "demo-deployment",
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: int32Ptr(2),
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"app": "demo",
+				},
+			},
+			Template: apiv1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: map[string]string{
+						"app": "demo",
+					},
+				},
+				Spec: apiv1.PodSpec{
+					Containers: []apiv1.Container{
+						{
+							Name:  "web",
+							Image: "nginx:1.12",
+							Ports: []apiv1.ContainerPort{
+								{
+									Name:          "http",
+									Protocol:      apiv1.ProtocolTCP,
+									ContainerPort: 80,
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	fmt.Println("creating ....")
+
+	result, err := deploymentClient.Create(deployment)
+
+	handleError(err)
+
+	log.Printf("created deployment %q /n", result.GetObjectMeta().GetName())
 }
 
 func getKubeConfig(usingKind bool) string {
@@ -125,4 +201,8 @@ func getKindConfigByCommand() string {
 	handleError(err)
 	result := string(output)
 	return result
+}
+
+func int32Ptr(i int32) *int32 {
+	return &i
 }
