@@ -3,6 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
+
+	//adapter "kube/microbusiness/lib"
 	"log"
 	"os"
 	"os/exec"
@@ -38,6 +40,8 @@ func main() {
 	createDeployment(&clientSet)
 
 	showMethePods(&clientSet)
+
+	//adapter.TestPackage("hey")
 }
 
 func createService(clientSet *kubernetes.Clientset) {
