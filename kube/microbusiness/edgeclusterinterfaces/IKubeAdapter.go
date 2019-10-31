@@ -15,7 +15,7 @@ type KubeCRUDAdapter interface {
 
 // KuebConnectionAdapter microbusiness Kubernetes interface for connecting to Kubernetes
 type KuebConnectionAdapter interface {
-	GetKubeConfig(isUsingKind bool) *rest.Config
+	GetKubeConfig() *rest.Config
 	ConnectToCluster(configContext *rest.Config) kubernetes.Clientset
 }
 

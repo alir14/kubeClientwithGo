@@ -22,25 +22,19 @@ type EdgeClusterServiceDetail struct {
 	Replicas       int32
 	ContainerName  string
 	ContainerImage string
+	ConfigName     string
 }
 
 //GetKubeConfig getting kube configuration from os
-func (edge EdgeClusterServiceDetail) GetKubeConfig(isUsingKind bool) *rest.Config {
+func (edge EdgeClusterServiceDetail) GetKubeConfig() *rest.Config {
 	var kubeconfig string
 
 	//get hoem directory path
 	homeDir := microbusiness.GetHomeDirectoryPath()
 	log.Print(homeDir)
 
-	var configName string
-	if isUsingKind {
-		configName = "kind-config-devEnv"
-	} else {
-		configName = "config"
-	}
-
 	if homeDir != "" {
-		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(homeDir, ".kube", configName), "(optional) path to config file")
+		flag.StringVar(&kubeconfig, "kubeconfig", filepath.Join(homeDir, ".kube", edge.ConfigName), "(optional) path to config file")
 	} else {
 		flag.StringVar(&kubeconfig, "kubeconfig", "", "path to kube config file")
 	}
