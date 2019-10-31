@@ -1,6 +1,7 @@
 package edgeclusterinterfaces
 
 import (
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -20,6 +21,6 @@ type KuebConnectionAdapter interface {
 
 // KubeMonitor microbusiness Kubernetes interface for monitoring
 type KubeMonitor interface {
-	GetPods(clientSet *kubernetes.Clientset) []string
-	GetPod(clientSet *kubernetes.Clientset, namespace string, podName string) string
+	GetPods(clientSet *kubernetes.Clientset) *v1.PodList
+	GetPod(clientSet *kubernetes.Clientset) *v1.Pod
 }

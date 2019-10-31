@@ -210,3 +210,17 @@
 // func int32Ptr(i int32) *int32 {
 // 	return &i
 // }
+
+https://github.com/kubernetes/client-go/blob/1a481fb1e32d196227ca218b3867a271192f9280/rest/client_test.go#L331
+func restClient(testServer *httptest.Server) (*RESTClient, error) {
+	c, err := RESTClientFor(&Config{
+		Host: testServer.URL,
+		ContentConfig: ContentConfig{
+			GroupVersion:         &v1.SchemeGroupVersion,
+			NegotiatedSerializer: scheme.Codecs.WithoutConversion(),
+		},
+		Username: "user",
+		Password: "pass",
+	})
+	return c, err
+}
