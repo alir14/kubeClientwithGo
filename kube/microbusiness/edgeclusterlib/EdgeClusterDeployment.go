@@ -16,8 +16,9 @@ import (
 
 //EdgeClusterDeploymentDetail microbusiness adapter for deployment
 type EdgeClusterDeploymentDetail struct {
-	Name           string
-	DomainName     string
+	AppName        string
+	MetaDataName   string
+	NameSpace      string
 	IPAddress      string
 	Replicas       int32
 	ContainerName  string
@@ -62,7 +63,7 @@ func (edge EdgeClusterDeploymentDetail) ConnectToCluster(configContext *rest.Con
 //Create deployment
 func (edge EdgeClusterDeploymentDetail) Create(clientSet *kubernetes.Clientset) {
 	log.Println("call Create from deployment")
-	deploymentClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
+	deploymentClient := clientSet.AppsV1().Deployments(edge.NameSpace)
 
 	deploymentConfig := edge.populateDeploymentConfigValue()
 
@@ -89,26 +90,26 @@ func (edge EdgeClusterDeploymentDetail) Delete(clientSet *kubernetes.Clientset) 
 func (edge EdgeClusterDeploymentDetail) populateDeploymentConfigValue() *appsv1.Deployment {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "demo-deployment",
+			Name: edge.MetaDataName,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: microbusiness.Int32Ptr(2),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "demo",
+					"app": edge.AppName,
 				},
 			},
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "demo",
+						"app": edge.AppName,
 					},
 				},
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:  "web",
-							Image: "nginx:1.12",
+							Name:  edge.ContainerName,
+							Image: edge.ContainerImage,
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "http",

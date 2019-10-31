@@ -16,13 +16,13 @@ import (
 
 //EdgeClusterServiceDetail micro business adapter for service
 type EdgeClusterServiceDetail struct {
-	Name           string
-	DomainName     string
-	IPAddress      string
-	Replicas       int32
-	ContainerName  string
-	ContainerImage string
-	ConfigName     string
+	MetaDataName string
+	LabelName    string
+	NameSpace    string
+	IPAddress    string
+	Port         int
+	Selector     string
+	ConfigName   string
 }
 
 //GetKubeConfig getting kube configuration from os
@@ -89,16 +89,16 @@ func (edge EdgeClusterServiceDetail) Delete(clientSet *kubernetes.Clientset) {
 func (edge EdgeClusterServiceDetail) populateDeploymentConfigValue() *apiv1.Service {
 	service := &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "demo-deploymentservice",
-			Namespace: apiv1.NamespaceDefault,
+			Name:      edge.MetaDataName,
+			Namespace: edge.NameSpace,
 			Labels: map[string]string{
-				"k8s-app": "kube-controller-manager",
+				"k8s-app": edge.LabelName,
 			},
 		},
 		Spec: apiv1.ServiceSpec{
-			Ports:     nil,
-			Selector:  nil,
-			ClusterIP: "",
+			Ports:     edge.Port,
+			Selector:  edge.Selector,
+			ClusterIP: edge.IPAddress,
 		},
 	}
 
