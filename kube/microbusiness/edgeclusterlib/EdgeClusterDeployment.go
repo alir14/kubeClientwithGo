@@ -18,7 +18,7 @@ import (
 //EdgeClusterDeploymentDetail microbusiness adapter for deployment
 type EdgeClusterDeploymentDetail struct {
 	Name           string
-	DomainName     string
+	NameSpace      string
 	IPAddress      string
 	Replicas       int32
 	ContainerName  string
@@ -80,11 +80,26 @@ func (edge EdgeClusterDeploymentDetail) Create(clientSet *kubernetes.Clientset) 
 func (edge EdgeClusterDeploymentDetail) UpdateWithRetry(clientSet *kubernetes.Clientset) {
 	log.Println("call Update from deployment")
 
-	updateClient := clientset.AppsV1().Deployments(apiv1.NamespaceDefault)
+	updateClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
 
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		// result, geterr := updateClient.Get(edge.)
+		result, getErr := updateClient.Get(edge.NameSpace, metav1.GetOptions{})
+		if getErr != nil {
+			log.Println("Failed to get the deployment for update..")
+		}
+
+		//Do what need to be updated
+		//Todo complete the whole necessary fileds
+		result.Spec.Replicas = microbusiness.Int32Ptr(edge.Replicas)
+		result.Spec.Template.Spec.Containers[0].Image = edge.ContainerImage
+
+		_, updateErr := updateClient.Update(result)
+
+		return updateErr
 	})
+
+	microbusiness.HandleError(retryErr)
+	log.Println("Update complete ...")
 }
 
 //Delete deployment
@@ -96,19 +111,19 @@ func (edge EdgeClusterDeploymentDetail) Delete(clientSet *kubernetes.Clientset) 
 func (edge EdgeClusterDeploymentDetail) populateDeploymentConfigValue() *appsv1.Deployment {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "demo-deployment",
+			Name: edge.NameSpace,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: microbusiness.Int32Ptr(2),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": "demo",
+					"app": edge.Name,
 				},
 			},
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": "demo",
+						"app": edge.Name,
 					},
 				},
 				Spec: apiv1.PodSpec{

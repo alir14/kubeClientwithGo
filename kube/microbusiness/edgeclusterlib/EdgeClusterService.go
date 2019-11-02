@@ -18,7 +18,7 @@ import (
 //EdgeClusterServiceDetail micro business adapter for service
 type EdgeClusterServiceDetail struct {
 	Name           string
-	DomainName     string
+	NameSpace      string
 	IPAddress      string
 	Replicas       int32
 	ContainerName  string
@@ -80,9 +80,28 @@ func (edge EdgeClusterServiceDetail) Create(clientSet *kubernetes.Clientset) {
 //Update service
 func (edge EdgeClusterServiceDetail) UpdateWithRetry(clientSet *kubernetes.Clientset) {
 	log.Println("call Update from service")
+
+	updateClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
+
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
+		result, getErr := updateClient.Get(edge.NameSpace, metav1.GetOptions{})
+		if getErr != nil {
+			log.Println("Failed to get the deployment for update..")
+		}
+
+		//Do what need to be updated
+		//Todo complete the whole necessary fileds
+		result.Spec.Replicas = microbusiness.Int32Ptr(edge.Replicas)
+		result.Spec.Template.Spec.Containers[0].Image = edge.ContainerImage
+
+		_, updateErr := updateClient.Update(result)
+
+		return updateErr
 	})
+
+	microbusiness.HandleError(retryErr)
+	log.Println("Update complete ...")
 }
 
 //Delete service
