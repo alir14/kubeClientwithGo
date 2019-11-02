@@ -107,6 +107,15 @@ func (edge EdgeClusterServiceDetail) UpdateWithRetry(clientSet *kubernetes.Clien
 //Delete service
 func (edge EdgeClusterServiceDetail) Delete(clientSet *kubernetes.Clientset) {
 	log.Println("call Delete from service")
+
+	deleteClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
+	deletePolicy := metav1.DeletePropagationForeground
+
+	err := deleteClient.Delete(edge.NameSpace, &metav1.DeleteOptions{
+		DeletePropagation: &deletePolicy,
+	})
+
+	microbusiness.HandleError(err)
 }
 
 func (edge EdgeClusterServiceDetail) populateDeploymentConfigValue() *apiv1.Service {

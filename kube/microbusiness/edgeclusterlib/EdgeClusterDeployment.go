@@ -105,6 +105,15 @@ func (edge EdgeClusterDeploymentDetail) UpdateWithRetry(clientSet *kubernetes.Cl
 //Delete deployment
 func (edge EdgeClusterDeploymentDetail) Delete(clientSet *kubernetes.Clientset) {
 	log.Println("call Delete from deployment")
+
+	deleteClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
+	deletePolicy := metav1.DeletePropagationForeground
+
+	err := deleteClient.Delete(edge.NameSpace, &metav1.DeleteOptions{
+		PropagationPolicy: &deletePolicy,
+	})
+
+	microbusiness.HandleError(err)
 }
 
 //PopulateDeploymentConfigValue create spec object for deployment
