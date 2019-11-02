@@ -17,8 +17,8 @@ import (
 
 //EdgeClusterDeploymentDetail microbusiness adapter for deployment
 type EdgeClusterDeploymentDetail struct {
-	Name           string
-	NameSpace      string
+	Metaobject     microbusiness.DeploymentMetaData
+	AppName        string
 	IPAddress      string
 	Replicas       int32
 	ContainerName  string
@@ -83,7 +83,7 @@ func (edge EdgeClusterDeploymentDetail) UpdateWithRetry(clientSet *kubernetes.Cl
 	updateClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
 
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-		result, getErr := updateClient.Get(edge.NameSpace, metav1.GetOptions{})
+		result, getErr := updateClient.Get(edge.Metaobject.Name, metav1.GetOptions{})
 		if getErr != nil {
 			log.Println("Failed to get the deployment for update..")
 		}
@@ -109,7 +109,7 @@ func (edge EdgeClusterDeploymentDetail) Delete(clientSet *kubernetes.Clientset) 
 	deleteClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
 	deletePolicy := metav1.DeletePropagationForeground
 
-	err := deleteClient.Delete(edge.NameSpace, &metav1.DeleteOptions{
+	err := deleteClient.Delete(edge.Metaobject.Name, &metav1.DeleteOptions{
 		PropagationPolicy: &deletePolicy,
 	})
 
@@ -120,19 +120,19 @@ func (edge EdgeClusterDeploymentDetail) Delete(clientSet *kubernetes.Clientset) 
 func (edge EdgeClusterDeploymentDetail) populateDeploymentConfigValue() *appsv1.Deployment {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: edge.NameSpace,
+			Name: edge.Metaobject.Name,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: microbusiness.Int32Ptr(2),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					"app": edge.Name,
+					"app": edge.AppName,
 				},
 			},
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						"app": edge.Name,
+						"app": edge.AppName,
 					},
 				},
 				Spec: apiv1.PodSpec{

@@ -17,13 +17,15 @@ import (
 
 //EdgeClusterServiceDetail micro business adapter for service
 type EdgeClusterServiceDetail struct {
-	Name           string
-	NameSpace      string
+	Metaobject     microbusiness.DeploymentMetaData
+	AppName        string
 	IPAddress      string
+	Ports          int32
 	Replicas       int32
 	ContainerName  string
 	ContainerImage string
 	ConfigName     string
+	Selector       string
 }
 
 //GetKubeConfig getting kube configuration from os
@@ -85,7 +87,7 @@ func (edge EdgeClusterServiceDetail) UpdateWithRetry(clientSet *kubernetes.Clien
 
 	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
 
-		result, getErr := updateClient.Get(edge.NameSpace, metav1.GetOptions{})
+		result, getErr := updateClient.Get(edge.Metaobject.Name, metav1.GetOptions{})
 		if getErr != nil {
 			log.Println("Failed to get the deployment for update..")
 		}
@@ -111,7 +113,7 @@ func (edge EdgeClusterServiceDetail) Delete(clientSet *kubernetes.Clientset) {
 	deleteClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
 	deletePolicy := metav1.DeletePropagationForeground
 
-	err := deleteClient.Delete(edge.NameSpace, &metav1.DeleteOptions{
+	err := deleteClient.Delete(edge.Metaobject.Name, &metav1.DeleteOptions{
 		DeletePropagation: &deletePolicy,
 	})
 
@@ -121,16 +123,16 @@ func (edge EdgeClusterServiceDetail) Delete(clientSet *kubernetes.Clientset) {
 func (edge EdgeClusterServiceDetail) populateDeploymentConfigValue() *apiv1.Service {
 	service := &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "demo-deploymentservice",
+			Name:      edge.Metaobject.Name,
 			Namespace: apiv1.NamespaceDefault,
 			Labels: map[string]string{
 				"k8s-app": "kube-controller-manager",
 			},
 		},
 		Spec: apiv1.ServiceSpec{
-			Ports:     nil,
-			Selector:  nil,
-			ClusterIP: "",
+			Ports:     edge.Ports,
+			Selector:  edge.Selector,
+			ClusterIP: edge.IPAddress,
 		},
 	}
 
