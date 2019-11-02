@@ -12,6 +12,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/retry"
 )
 
 //EdgeClusterDeploymentDetail microbusiness adapter for deployment
@@ -82,8 +83,14 @@ func (edge EdgeClusterDeploymentDetail) Create(clientSet *kubernetes.Clientset) 
 }
 
 //Update deployment
-func (edge EdgeClusterDeploymentDetail) Update(clientSet *kubernetes.Clientset) {
+func (edge EdgeClusterDeploymentDetail) UpdateWithRetry(clientSet *kubernetes.Clientset) {
 	log.Println("call Update from deployment")
+
+	updateClient := clientset.AppsV1().Deployments(apiv1.NamespaceDefault)
+
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+		// result, geterr := updateClient.Get(edge.)
+	})
 }
 
 //Delete deployment

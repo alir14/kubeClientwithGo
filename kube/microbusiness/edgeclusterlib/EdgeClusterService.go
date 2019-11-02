@@ -12,6 +12,7 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/retry"
 )
 
 //EdgeClusterServiceDetail micro business adapter for service
@@ -83,8 +84,11 @@ func (edge EdgeClusterServiceDetail) Create(clientSet *kubernetes.Clientset) {
 }
 
 //Update service
-func (edge EdgeClusterServiceDetail) Update(clientSet *kubernetes.Clientset) {
+func (edge EdgeClusterServiceDetail) UpdateWithRetry(clientSet *kubernetes.Clientset) {
 	log.Println("call Update from service")
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+
+	})
 }
 
 //Delete service
