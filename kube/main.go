@@ -14,7 +14,13 @@ func main() {
 	var objDeployment edgeclusterlib.EdgeClusterDeploymentDetail
 	var objService edgeclusterlib.EdgeClusterServiceDetail
 
-	configContext := objDeployment.GetKubeConfig(isUsingKind)
+	if isUsingKind {
+		objDeployment.ConfigName = "kind-config-devEnv"
+	} else {
+		objDeployment.ConfigName = "config"
+	}
+
+	configContext := objDeployment.GetKubeConfig()
 
 	objDeployment.ConnectToCluster(configContext)
 
