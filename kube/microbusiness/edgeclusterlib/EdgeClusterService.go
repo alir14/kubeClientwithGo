@@ -17,15 +17,16 @@ import (
 
 //EdgeClusterServiceDetail micro business adapter for service
 type EdgeClusterServiceDetail struct {
-	Metaobject     microbusiness.DeploymentMetaData
+	Metaobject     microbusiness.MetaData
 	AppName        string
 	IPAddress      string
-	Ports          int32
+	Ports          []apiv1.ServicePort
 	Replicas       int32
 	ContainerName  string
 	ContainerImage string
 	ConfigName     string
-	Selector       string
+	Selector       map[string]string
+	LabelName      string
 }
 
 //GetKubeConfig getting kube configuration from os
@@ -114,7 +115,7 @@ func (edge EdgeClusterServiceDetail) Delete(clientSet *kubernetes.Clientset) {
 	deletePolicy := metav1.DeletePropagationForeground
 
 	err := deleteClient.Delete(edge.Metaobject.Name, &metav1.DeleteOptions{
-		DeletePropagation: &deletePolicy,
+		PropagationPolicy: &deletePolicy,
 	})
 
 	microbusiness.HandleError(err)

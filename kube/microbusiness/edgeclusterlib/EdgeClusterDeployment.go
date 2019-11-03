@@ -17,7 +17,7 @@ import (
 
 //EdgeClusterDeploymentDetail microbusiness adapter for deployment
 type EdgeClusterDeploymentDetail struct {
-	Metaobject     microbusiness.DeploymentMetaData
+	Metaobject     microbusiness.MetaData
 	AppName        string
 	IPAddress      string
 	Replicas       int32
@@ -63,7 +63,7 @@ func (edge EdgeClusterDeploymentDetail) ConnectToCluster(configContext *rest.Con
 //Create deployment
 func (edge EdgeClusterDeploymentDetail) Create(clientSet *kubernetes.Clientset) {
 	log.Println("call Create from deployment")
-	deploymentClient := clientSet.AppsV1().Deployments(edge.NameSpace)
+	deploymentClient := clientSet.AppsV1().Deployments(edge.Metaobject.NameSpace)
 
 	deploymentConfig := edge.populateDeploymentConfigValue()
 
@@ -76,7 +76,7 @@ func (edge EdgeClusterDeploymentDetail) Create(clientSet *kubernetes.Clientset) 
 	log.Printf("created deployment %q /n", result.GetObjectMeta().GetName())
 }
 
-//Update deployment
+//UpdateWithRetry deployment
 func (edge EdgeClusterDeploymentDetail) UpdateWithRetry(clientSet *kubernetes.Clientset) {
 	log.Println("call Update from deployment")
 

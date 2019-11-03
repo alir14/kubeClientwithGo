@@ -21,9 +21,9 @@ func main() {
 		objDeployment.ConfigName = "config"
 	}
 
-	objDeployment.NameSpace = apiv1.NamespaceDefault
+	objDeployment.Metaobject.NameSpace = apiv1.NamespaceDefault
 	objDeployment.AppName = "Test1"
-	objDeployment.MetaData = "Test1"
+	objDeployment.Metaobject.Name = "Test1"
 	objDeployment.ContainerImage = ""
 	objDeployment.ContainerName = ""
 
@@ -31,10 +31,10 @@ func main() {
 
 	objDeployment.ConnectToCluster(configContext)
 
-	objDeployment.Name = "test"
+	objDeployment.AppName = "test"
 
-	log.Print(objDeployment.Name)
-	log.Print(objService.Name)
+	log.Print(objDeployment.AppName)
+	log.Print(objService.AppName)
 
 	log.Println("test")
 }

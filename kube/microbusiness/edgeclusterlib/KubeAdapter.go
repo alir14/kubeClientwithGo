@@ -25,13 +25,15 @@ func (adapter KubeAdapter) GetPods(clientSet *kubernetes.Clientset) *v1.PodList 
 	microbusiness.HandleError(err)
 
 	log.Printf(" number of pods is %s /n", len(pods.Items))
+
+	return pods
 }
 
 //GetPod getting a specific pod by name in Kubernetes
 func (adapter KubeAdapter) GetPod(clientSet *kubernetes.Clientset) *v1.Pod {
 	log.Printf(" get pod %s /n", adapter.PodName)
 
-	pod, err := clientSet.CoreV1().Pods(adapter.NameSpace).Get(adapter.PodName, metav1.GetOption{})
+	pod, err := clientSet.CoreV1().Pods(adapter.NameSpace).Get(adapter.PodName, metav1.GetOptions{})
 
 	statusError, isStatus := err.(*errors.StatusError)
 
@@ -44,5 +46,5 @@ func (adapter KubeAdapter) GetPod(clientSet *kubernetes.Clientset) *v1.Pod {
 		microbusiness.HandleError(err)
 	}
 
-	return pod.ns
+	return pod
 }
