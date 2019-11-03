@@ -2,8 +2,9 @@ package main
 
 import (
 	edgeclusterlib "kube/microbusiness/edgeclusterlib"
-
 	"log"
+
+	apiv1 "k8s.io/api/core/v1"
 )
 
 func main() {
@@ -19,6 +20,12 @@ func main() {
 	} else {
 		objDeployment.ConfigName = "config"
 	}
+
+	objDeployment.NameSpace = apiv1.NamespaceDefault
+	objDeployment.AppName = "Test1"
+	objDeployment.MetaData = "Test1"
+	objDeployment.ContainerImage = ""
+	objDeployment.ContainerName = ""
 
 	configContext := objDeployment.GetKubeConfig()
 

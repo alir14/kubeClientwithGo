@@ -12,17 +12,20 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/retry"
 )
 
 //EdgeClusterServiceDetail micro business adapter for service
 type EdgeClusterServiceDetail struct {
-	MetaDataName string
-	LabelName    string
-	NameSpace    string
-	IPAddress    string
-	Port         int
-	Selector     string
-	ConfigName   string
+	Metaobject     microbusiness.DeploymentMetaData
+	AppName        string
+	IPAddress      string
+	Ports          int32
+	Replicas       int32
+	ContainerName  string
+	ContainerImage string
+	ConfigName     string
+	Selector       string
 }
 
 //GetKubeConfig getting kube configuration from os
@@ -77,26 +80,57 @@ func (edge EdgeClusterServiceDetail) Create(clientSet *kubernetes.Clientset) {
 }
 
 //Update service
-func (edge EdgeClusterServiceDetail) Update(clientSet *kubernetes.Clientset) {
+func (edge EdgeClusterServiceDetail) UpdateWithRetry(clientSet *kubernetes.Clientset) {
 	log.Println("call Update from service")
+
+	updateClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
+
+	retryErr := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+
+		result, getErr := updateClient.Get(edge.Metaobject.Name, metav1.GetOptions{})
+		if getErr != nil {
+			log.Println("Failed to get the deployment for update..")
+		}
+
+		//Do what need to be updated
+		//Todo complete the whole necessary fileds
+		result.Spec.Replicas = microbusiness.Int32Ptr(edge.Replicas)
+		result.Spec.Template.Spec.Containers[0].Image = edge.ContainerImage
+
+		_, updateErr := updateClient.Update(result)
+
+		return updateErr
+	})
+
+	microbusiness.HandleError(retryErr)
+	log.Println("Update complete ...")
 }
 
 //Delete service
 func (edge EdgeClusterServiceDetail) Delete(clientSet *kubernetes.Clientset) {
 	log.Println("call Delete from service")
+
+	deleteClient := clientSet.AppsV1().Deployments(apiv1.NamespaceDefault)
+	deletePolicy := metav1.DeletePropagationForeground
+
+	err := deleteClient.Delete(edge.Metaobject.Name, &metav1.DeleteOptions{
+		DeletePropagation: &deletePolicy,
+	})
+
+	microbusiness.HandleError(err)
 }
 
 func (edge EdgeClusterServiceDetail) populateDeploymentConfigValue() *apiv1.Service {
 	service := &apiv1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      edge.MetaDataName,
-			Namespace: edge.NameSpace,
+			Name:      edge.Metaobject.Name,
+			Namespace: apiv1.NamespaceDefault,
 			Labels: map[string]string{
 				"k8s-app": edge.LabelName,
 			},
 		},
 		Spec: apiv1.ServiceSpec{
-			Ports:     edge.Port,
+			Ports:     edge.Ports,
 			Selector:  edge.Selector,
 			ClusterIP: edge.IPAddress,
 		},

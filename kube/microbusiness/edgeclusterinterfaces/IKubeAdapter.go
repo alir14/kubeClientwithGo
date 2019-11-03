@@ -9,7 +9,8 @@ import (
 // KubeCRUDAdapter microbusiness Kubernetes interface for create,update and delete
 type KubeCRUDAdapter interface {
 	Create(clientSet *kubernetes.Clientset)
-	Update(clientSet *kubernetes.Clientset)
+	UpdateWithRetry(clientSet *kubernetes.Clientset)
+	Replace(clientSet *kubernetes.Clientset)
 	Delete(clientSet *kubernetes.Clientset)
 }
 
