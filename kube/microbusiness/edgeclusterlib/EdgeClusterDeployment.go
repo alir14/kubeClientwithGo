@@ -23,6 +23,8 @@ type EdgeClusterDeploymentDetail struct {
 	Replicas       int32
 	ContainerName  string
 	ContainerImage string
+	Args           []string
+	Ports          []int32
 	ConfigName     string
 }
 

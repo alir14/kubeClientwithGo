@@ -25,6 +25,7 @@ type EdgeClusterServiceDetail struct {
 	ContainerName  string
 	ContainerImage string
 	ConfigName     string
+	Args           []string
 	Selector       map[string]string
 	LabelName      string
 }
@@ -80,7 +81,7 @@ func (edge EdgeClusterServiceDetail) Create(clientSet *kubernetes.Clientset) {
 	log.Printf("created service %q /n", result.GetObjectMeta().GetName())
 }
 
-//Update service
+//UpdateWithRetry service
 func (edge EdgeClusterServiceDetail) UpdateWithRetry(clientSet *kubernetes.Clientset) {
 	log.Println("call Update from service")
 

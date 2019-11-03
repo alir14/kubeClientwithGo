@@ -4,7 +4,8 @@ import (
 	edgeclusterlib "kube/microbusiness/edgeclusterlib"
 	"log"
 
-	apiv1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func main() {
@@ -21,11 +22,28 @@ func main() {
 		objDeployment.ConfigName = "config"
 	}
 
-	objDeployment.Metaobject.NameSpace = apiv1.NamespaceDefault
-	objDeployment.AppName = "Test1"
-	objDeployment.Metaobject.Name = "Test1"
-	objDeployment.ContainerImage = ""
-	objDeployment.ContainerName = ""
+	//objDeployment.Metaobject.NameSpace = "azizi-deployment"
+	objDeployment.Metaobject.Name = "azizi-deployment"
+	objDeployment.AppName = "azizi-myfirst"
+	objDeployment.Replicas = 2
+	objDeployment.ContainerName = "myfirst"
+	objDeployment.ContainerImage = "mortezaazizi/myfirstcontainer"
+	objDeployment.Args[0] = "/src-azizi2/main"
+	objDeployment.Ports[0] = 8080
+
+	objService.Metaobject.Name = "azizi-myfirst-service"
+
+	objService.Ports = []v1.ServicePort{
+		{
+			Protocol:   "TCP",
+			Port:       12345,
+			TargetPort: intstr.FromInt(12345),
+		},
+	}
+
+	objService.Selector = map[string]string{
+		"app": "azizi-myfirst",
+	}
 
 	configContext := objDeployment.GetKubeConfig()
 
