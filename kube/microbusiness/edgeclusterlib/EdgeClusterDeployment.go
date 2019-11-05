@@ -24,7 +24,7 @@ type EdgeClusterDeploymentDetail struct {
 	ContainerName  string
 	ContainerImage string
 	Args           []string
-	Ports          []int32
+	Ports          int32
 	ConfigName     string
 }
 
@@ -65,6 +65,10 @@ func (edge EdgeClusterDeploymentDetail) ConnectToCluster(configContext *rest.Con
 //Create deployment
 func (edge EdgeClusterDeploymentDetail) Create(clientSet *kubernetes.Clientset) {
 	log.Println("call Create from deployment")
+	if edge.Metaobject.NameSpace == "" {
+		edge.Metaobject.NameSpace = apiv1.NamespaceDefault
+	}
+
 	deploymentClient := clientSet.AppsV1().Deployments(edge.Metaobject.NameSpace)
 
 	deploymentConfig := edge.populateDeploymentConfigValue()
@@ -122,7 +126,8 @@ func (edge EdgeClusterDeploymentDetail) Delete(clientSet *kubernetes.Clientset) 
 func (edge EdgeClusterDeploymentDetail) populateDeploymentConfigValue() *appsv1.Deployment {
 	deployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: edge.Metaobject.Name,
+			Name:      edge.Metaobject.Name,
+			Namespace: apiv1.NamespaceDefault,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: microbusiness.Int32Ptr(2),
@@ -146,9 +151,10 @@ func (edge EdgeClusterDeploymentDetail) populateDeploymentConfigValue() *appsv1.
 								{
 									Name:          "http",
 									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: 80,
+									ContainerPort: edge.Ports,
 								},
 							},
+							Args: edge.Args,
 						},
 					},
 				},

@@ -72,6 +72,9 @@ func (edge EdgeClusterServiceDetail) Create(clientSet *kubernetes.Clientset) {
 
 	serviceConfig := edge.populateDeploymentConfigValue()
 
+	//spew.Dump(edge)
+	//spew.Dump(serviceConfig)
+
 	log.Println("creating ....")
 
 	result, err := serviceDeployment.Create(serviceConfig)
@@ -132,6 +135,7 @@ func (edge EdgeClusterServiceDetail) populateDeploymentConfigValue() *apiv1.Serv
 			},
 		},
 		Spec: apiv1.ServiceSpec{
+			Type:      "LoadBalancer",
 			Ports:     edge.Ports,
 			Selector:  edge.Selector,
 			ClusterIP: edge.IPAddress,

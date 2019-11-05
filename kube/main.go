@@ -22,22 +22,20 @@ func main() {
 		objDeployment.ConfigName = "config"
 	}
 
-	//objDeployment.Metaobject.NameSpace = "azizi-deployment"
 	objDeployment.Metaobject.Name = "azizi-deployment"
 	objDeployment.AppName = "azizi-myfirst"
 	objDeployment.Replicas = 2
 	objDeployment.ContainerName = "myfirst"
 	objDeployment.ContainerImage = "mortezaazizi/myfirstcontainer"
-	objDeployment.Args[0] = "/src-azizi2/main"
-	objDeployment.Ports[0] = 8080
+	objDeployment.Args = []string{"/src-azizi2/main"}
+	objDeployment.Ports = 8080
 
 	objService.Metaobject.Name = "azizi-myfirst-service"
-
 	objService.Ports = []v1.ServicePort{
 		{
 			Protocol:   "TCP",
 			Port:       12345,
-			TargetPort: intstr.FromInt(12345),
+			TargetPort: intstr.FromInt(8080),
 		},
 	}
 
@@ -47,9 +45,10 @@ func main() {
 
 	configContext := objDeployment.GetKubeConfig()
 
-	objDeployment.ConnectToCluster(configContext)
+	clientSet := objDeployment.ConnectToCluster(configContext)
 
-	objDeployment.AppName = "test"
+	objDeployment.Create(&clientSet)
+	objService.Create(&clientSet)
 
 	log.Print(objDeployment.AppName)
 	log.Print(objService.AppName)
